@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <limits.h>
+
+void srtf(int burst_times[], int arrival_times[], int n) {
+    int total_time = 0;
+    float total_wait_time = 0;
+    float total_turnaround_time = 0;
+    float total_reaction_time = 0;
+    float total_relative_delay = 0;
+    int remaining[n], i; 
+    for (i = 0; i < n; i++)
+        remaining[i] = burst_times[i]; // Initialize remaining burst times
+
+    printf("Process\tArrival Time\tBurst Time\tTurnaround Time\tWaiting Time\tReaction Time\tRelative Delay\n");
+    printf("----------------------------------------------------------------------------------------------------\n");
+
+    int completed_count = 0;
+    while (completed_count < n) {
+        int shortest_burst = INT_MAX;
+        int shortest_index = -1;
+        for (i = 0; i < n; i++) {
+            if (remaining[i] > 0 && arrival_times[i] <= total_time && remaining[i] < shortest_burst) {
+                shortest_burst = remaining[i];
+                shortest_index = i;
+            }
+        }
+
+        if (shortest_index != -1) {
+            // Process found
+            int min_burst = (remaining[shortest_index] < burst_times[shortest_index]) ? remaining[shortest_index] : burst_times[shortest_index];
+            remaining[shortest_index] -= 1; // Decrease remaining burst time
+
+            total_time++;
+
+            if (remaining[shortest_index] == 0) {
+                // Process completed
+                completed_count++;
+
+                int waiting_time = total_time - arrival_times[shortest_index] - burst_times[shortest_index] + 1;
+                int turnaround_time = total_time - arrival_times[shortest_index];
+                int reaction_time = turnaround_time - burst_times[shortest_index];
+                float relative_delay = (float)turnaround_time / burst_times[shortest_index];
+
+                total_wait_time += waiting_time;
+                total_turnaround_time += turnaround_time;
+                total_reaction_time += reaction_time;
+                total_relative_delay += relative_delay;
+
+                printf("%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%.2f\n", shortest_index + 1, arrival_times[shortest_index], burst_times[shortest_index], turnaround_time, waiting_time, reaction_time, relative_delay);
+            }
+        } else {
+            total_time++; // No process is ready, time continues
+        }
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround_time / n);        
+    printf("Average Waiting Time: %.2f\n", total_wait_time / n);
+    printf("Average Reaction Time: %.2f\n", total_reaction_time / n);
+    printf("Average Relative Delay: %.2f\n", total_relative_delay / n);
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    int burst_times[n], arrival_times[n], i;
+    printf("Enter arrival time and burst time for each process:\n");
+    for (i = 0; i < n; i++) {
+        printf("Process %d: ", i + 1);
+        scanf("%d %d", &arrival_times[i], &burst_times[i]);
+    }
+    srtf(burst_times, arrival_times, n);
+    return 0;
+}

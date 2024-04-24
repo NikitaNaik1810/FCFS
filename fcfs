@@ -1,0 +1,91 @@
+#include <stdio.h>
+
+#define MAX_PROCESSES 10
+
+void calculateTimes(int arrival_time[], int burst_time[], int n) {
+    int completion_time[MAX_PROCESSES];
+    int turnaround_time[MAX_PROCESSES];
+    int waiting_time[MAX_PROCESSES];
+    int reaction_time[MAX_PROCESSES];
+    float relative_delay[MAX_PROCESSES];
+    int total_waiting_time = 0;
+    int total_turnaround_time = 0;
+    int total_reaction_time = 0;
+    float total_relative_delay = 0;
+    int i,j;
+    
+    for (i = 0; i < n - 1; i++) {
+        for ( j = 0; j < n - i - 1; j++) {
+            if (arrival_time[j] > arrival_time[j + 1] || 
+                (arrival_time[j] == arrival_time[j + 1] && j > j + 1)) {
+                
+                int temp = arrival_time[j];
+                arrival_time[j] = arrival_time[j + 1];
+                arrival_time[j + 1] = temp;
+
+                temp = burst_time[j];
+                burst_time[j] = burst_time[j + 1];
+                burst_time[j + 1] = temp;
+            }
+        }
+    }
+
+    completion_time[0] = arrival_time[0] + burst_time[0];
+    turnaround_time[0] = completion_time[0] - arrival_time[0];
+    waiting_time[0] = turnaround_time[0] - burst_time[0];
+    reaction_time[0] = 0;
+    relative_delay[0] = (float)turnaround_time[0] / burst_time[0];
+    total_waiting_time += waiting_time[0];
+    total_turnaround_time += turnaround_time[0];
+    total_reaction_time += reaction_time[0];
+    total_relative_delay += relative_delay[0];
+    
+    for (i = 1; i < n; i++) {
+        reaction_time[i] = completion_time[i - 1] - arrival_time[i];
+        if (reaction_time[i] < 0) reaction_time[i] = 0;
+        completion_time[i] = completion_time[i - 1] + burst_time[i];
+        turnaround_time[i] = completion_time[i] - arrival_time[i];
+        waiting_time[i] = turnaround_time[i] - burst_time[i];
+        if (waiting_time[i] < 0) waiting_time[i] = 0;
+        relative_delay[i] = (float)turnaround_time[i] / burst_time[i];
+        total_waiting_time += waiting_time[i];
+        total_turnaround_time += turnaround_time[i];
+        total_reaction_time += reaction_time[i];
+        total_relative_delay += relative_delay[i];
+    }
+
+   
+    printf("Process\tArrival Time\tBurst Time\tCompletion Time\tTurnaround Time\tWaiting Time\tReaction Time\tRelative Delay\n");
+    
+    
+    for (i = 0; i < n; i++) {
+        printf("%d\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%.2f\n", i + 1, arrival_time[i],
+               burst_time[i], completion_time[i], turnaround_time[i],
+               waiting_time[i], reaction_time[i], relative_delay[i]);
+    }
+
+    printf("Average Waiting Time: %.2f\n", (float)total_waiting_time / n);
+    printf("Average Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+    printf("Average Reaction Time: %.2f\n", (float)total_reaction_time / n);
+    printf("Average Relative Delay: %.2f\n", total_relative_delay / n);
+}
+
+int main() {
+    int n;
+    int arrival_time[MAX_PROCESSES];
+    int burst_time[MAX_PROCESSES];
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    int i;
+    
+    for (i = 0; i < n; i++) {
+        printf("Enter arrival time and burst time for process %d: ", i + 1);
+        scanf("%d %d", &arrival_time[i], &burst_time[i]);
+    }
+
+    
+    calculateTimes(arrival_time, burst_time, n);
+
+    return 0;
+}
